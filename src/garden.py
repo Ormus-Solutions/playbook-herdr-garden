@@ -11,6 +11,7 @@ Usage:
     python3 src/garden.py send diff owner/repo        hand it over, as [handoff] in the config says
     python3 src/garden.py tab                         print the Herdr commands for the Garden tab
     python3 src/garden.py tab --apply                 run them (inside a Herdr pane)
+    python3 src/garden.py cron                        print the crontab line for a morning collect
 
 Settings: --config, else $GARDEN_CONFIG, else ~/.config/playbook-herdr-garden/config.toml.
 """
@@ -107,6 +108,22 @@ def cmd_pick(cfg: Config, today: str, demo: bool) -> int:
     return pane.supervise(cfg, load, stamp)
 
 
+def cron_line(root: Path, python: str, config: Path) -> str:
+    """The crontab line for a collect at 07:20 every morning.
+
+    cron runs the command with /bin/sh, a short PATH (often /usr/bin:/bin) and no
+    profile. So every path is absolute and in single quotes, and the interpreter
+    is the one running now (3.11 or newer), not whatever python3 cron finds. A '
+    cannot sit inside single quotes, and cron reads % as a new line, so a path
+    with either is refused instead of written as a line that fails every morning.
+    """
+    for path in (str(root), python, str(config)):
+        if "'" in path or "%" in path:
+            raise SystemExit(f"cron cannot run from {path}: the path holds ' or %. Move it, then try again")
+    return (f"20 7 * * * cd '{root}' && '{python}' src/garden.py --config '{config}' collect "
+            ">> ~/.local/state/playbook-herdr-garden/collect.log 2>&1")
+
+
 def cmd_tab(cfg: Config, args: argparse.Namespace, demo: bool) -> int:
     steps = herdr_tab.plan(cfg.herdr, ROOT, cfg.path.resolve(), cfg.agent, args.kind, args.label,
                            os.environ.get("HERDR_WORKSPACE_ID", ""))
@@ -141,6 +158,7 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--apply", action="store_true", help="run them (inside a Herdr pane)")
     t.add_argument("--kind", default="claude", help="the agent Herdr starts (claude, codex, grok, ...)")
     t.add_argument("--label", default="Garden", help="the tab's name")
+    sub.add_parser("cron", help="print the crontab line for a morning collect")
     args = parser.parse_args(argv)
 
     if args.today:
@@ -158,6 +176,9 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_pick(cfg, today, args.demo)
     if command == "tab":
         return cmd_tab(cfg, args, args.demo)
+    if command == "cron":
+        print(cron_line(ROOT, sys.executable, cfg.path.resolve()))
+        return 0
     board = read_board(cfg, today, args.demo)
     if command == "board":
         sys.stdout.write(render.board_text(board))

@@ -174,13 +174,29 @@ Expected: `1` or more (the agent got the prompt; its answer ends with a verdict:
 **Ask first**: this adds one line to the person's crontab. The pane loads a
 new board by itself when the file changes.
 
+This step needs cron: `command -v crontab` prints a path. If it prints
+nothing, install your system's cron package (cronie on many Linux systems),
+or skip this step and run `collect` by hand.
+
+cron runs the line with `/bin/sh`, a short `PATH` (often `/usr/bin:/bin`) and
+no profile, and it reads a `%` as a new line. So `python3 src/garden.py cron`
+writes the line for you: every path absolute and in single quotes, and the
+same Python 3.11 that runs it now, not an older `python3` cron might find. It
+refuses a path that holds `'` or `%`. The second command removes any older
+Garden line first, so running this step twice still leaves one line.
+
 ```bash
 mkdir -p ~/.local/state/playbook-herdr-garden
-(crontab -l 2>/dev/null; echo "20 7 * * * cd $PWD && python3 src/garden.py collect >> $HOME/.local/state/playbook-herdr-garden/collect.log 2>&1") | crontab -
+line="$(python3 src/garden.py cron)" && (crontab -l 2>/dev/null | grep -v 'playbook-herdr-garden/collect.log'; echo "$line") | crontab -
 ```
 
-Verify: `crontab -l | grep -c 'garden.py collect'`
+Verify: `crontab -l | grep -c 'playbook-herdr-garden/collect.log'`
 Expected: `1`
+
+Then run that line once the way cron will (it reads the feeds again):
+
+Verify: `env -i HOME="$HOME" PATH=/usr/bin:/bin /bin/sh -c "$(crontab -l | grep 'playbook-herdr-garden/collect.log' | cut -d' ' -f6-)"; tail -n 1 ~/.local/state/playbook-herdr-garden/collect.log`
+Expected: `written to` and the board's path. Anything else in the log is the reason the morning run would fail.
 
 ## Adapt it
 
@@ -214,7 +230,8 @@ Expected: `1`
 
 - The tab: `herdr tab close <tab-id>` (the id `tab --apply` printed; `herdr tab list` shows it again).
   This closes the pane and the agent in it.
-- The morning collect: `crontab -e` and delete the line with `garden.py collect`.
+- The morning collect: `crontab -l | grep -v 'playbook-herdr-garden/collect.log' | crontab -`
+  (or `crontab -e` and delete the line that holds `garden.py`).
 - The config, the setup file, the board and the log:
   `rm -r ~/.config/playbook-herdr-garden ~/.local/state/playbook-herdr-garden`
 - The repo: delete the clone. The tool writes nothing else.

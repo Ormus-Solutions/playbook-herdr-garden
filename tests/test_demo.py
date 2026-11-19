@@ -60,6 +60,17 @@ class DemoTest(unittest.TestCase):
         self.assertEqual(garden("--demo", "prompt", "analyze", links[0]).returncode, 0)
 
 
+class CronLineTest(unittest.TestCase):
+    def test_paths_are_quoted_and_a_quote_or_percent_is_refused(self) -> None:
+        import garden as garden_mod
+        line = garden_mod.cron_line(Path("/srv/acme web"), "/opt/py 3/bin/python3", Path("/srv/my garden.toml"))
+        self.assertIn("cd '/srv/acme web' && '/opt/py 3/bin/python3' src/garden.py "
+                      "--config '/srv/my garden.toml' collect", line)
+        for bad in ("/srv/it's", "/srv/100%"):  # cron reads % as a new line
+            with self.assertRaises(SystemExit):
+                garden_mod.cron_line(Path(bad), "/usr/bin/python3", Path("/srv/c.toml"))
+
+
 class OwnConfigTest(unittest.TestCase):
     """A reader's own config, with the example feeds as local files and a stand-in herdr."""
 
@@ -120,6 +131,19 @@ class OwnConfigTest(unittest.TestCase):
         call = json.loads(self.log.read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual(call[:3], ["agent", "prompt", "scout"])
         self.assertIn("https://github.com/acme/tdd-skill", call[3])
+
+    def test_the_cron_line_runs_where_cron_runs_it(self) -> None:
+        line = self.run_garden("cron").stdout.strip()
+        self.assertRegex(line, r"^20 7 \* \* \* cd '/.+' && '/.+' src/garden.py --config '/.+' collect >> ")
+        # cron runs the part after the five time fields with /bin/sh, a short
+        # PATH and little else. Run it the same way, once.
+        home = self.dir / "home"
+        (home / ".local" / "state" / "playbook-herdr-garden").mkdir(parents=True)
+        done = subprocess.run(["/bin/sh", "-c", line.split(" ", 5)[5]], capture_output=True, text=True,
+                              env={"HOME": str(home), "PATH": "/usr/bin:/bin"}, timeout=60)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        log = (home / ".local" / "state" / "playbook-herdr-garden" / "collect.log").read_text(encoding="utf-8")
+        self.assertTrue(log.splitlines()[-1].startswith("written to "), log)
 
     def test_board_before_collect_says_what_to_do(self) -> None:
         done = self.run_garden("board")
