@@ -58,6 +58,11 @@ PLAYBOOK.md).
 
 ### Hand it to your agent
 
+```bash
+git clone https://github.com/Ormus-Solutions/playbook-herdr-garden
+cd playbook-herdr-garden
+```
+
 Clone this repo, open your coding agent (Claude Code, Codex, Grok) inside the
 clone, and paste this:
 
