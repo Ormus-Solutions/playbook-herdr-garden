@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic RSS 2.0 feed for the demo. Every name and link is made up. -->
+<rss version="2.0">
+  <channel>
+    <title>Demo dev news</title>
+    <link>https://news.example.com/</link>
+    <description>A made-up news feed for the Garden demo.</description>
+    <item>
+      <title>How we run five coding agents in one terminal</title>
+      <link>https://news.example.com/2026/01/five-agents</link>
+      <description>&lt;p&gt;A team shows its &lt;b&gt;Herdr&lt;/b&gt; layout: one tab per project, one pane per agent.&lt;/p&gt;</description>
+      <pubDate>Tue, 13 Jan 2026 09:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Terminal emulators agree on a new graphics protocol</title>
+      <link>https://news.example.com/2026/01/graphics</link>
+      <description>Pictures in the terminal, the same way in every emulator.</description>
+      <pubDate>Mon, 12 Jan 2026 14:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Testing agents: a field report</title>
+      <link>https://news.example.com/2026/01/testing-agents</link>
+      <description>What broke when a team let agents write the tests first.</description>
+      <pubDate>Sat, 10 Jan 2026 11:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Ten prompt tricks</title>
+      <link>https://news.example.com/2025/11/prompt-tricks</link>
+      <description>An older post about prompts.</description>
+      <pubDate>Thu, 20 Nov 2025 10:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>acme/tdd-skill: write the test first</title>
+      <link>https://github.com/acme/tdd-skill</link>
+      <description>The same repo the search found. It shows once on the board.</description>
+      <pubDate>Wed, 14 Jan 2026 08:00:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>

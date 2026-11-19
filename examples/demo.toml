@@ -1,0 +1,35 @@
+# The demo config. It has the same keys as config.example.toml, but every
+# source is a local file in examples/sources/, so the demo needs no network,
+# no Herdr and no setup. `python3 src/garden.py --demo` uses this file.
+
+title = "demo garden"
+today = "2026-01-15"  # demo only: a fixed date, so the output never changes
+interests = ["agent", "terminal", "test", "python", "api"]
+setup = "~/.config/playbook-herdr-garden/setup.md"
+
+[filter]
+max_age_days = 30
+min_stars = 5
+drop = ["airdrop"]
+per_kind = 20
+
+[handoff]
+mode = "show"  # the demo shows each prompt and never sends it
+
+[[sources]]
+name = "repo search"
+type = "github-search"
+query = "topic:coding-agent pushed:>{since}"
+path = "sources/github-search.json"
+
+[[sources]]
+name = "dev news"
+type = "rss"
+path = "sources/dev-news.rss"
+
+[[sources]]
+name = "demo-api releases"
+type = "github-releases"
+repo = "acme/demo-api"
+kind = "news"
+path = "sources/demo-api-releases.atom"

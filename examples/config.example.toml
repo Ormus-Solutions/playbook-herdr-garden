@@ -1,6 +1,84 @@
 # Example config. Copy it to ~/.config/playbook-herdr-garden/config.toml and change it.
 # The tool reads only this file for its settings: no hosts or paths in the code.
 
-title = "acme-web board"
-lanes = ["api", "web", "docs"]
-states = ["open", "done"]
+title = "my garden"
+
+# What you care about. An item must start a word with one of these to stay on
+# the board, and each one it matches adds a point of fit. Short stems match
+# more: "agent" matches "agents" and "agent-skills".
+interests = ["agent", "terminal", "test", "herdr", "python"]
+
+# A short text about your own setup. The "diff" and "integrate" prompts ask
+# the agent to read it. See examples/setup.example.md.
+setup = "~/.config/playbook-herdr-garden/setup.md"
+
+# Where `collect` writes the board and the pane reads it (this is the default).
+board = "~/.local/state/playbook-herdr-garden/board.json"
+
+[filter]
+max_age_days = 30        # older items skip
+min_stars = 10           # GitHub repos with fewer stars skip
+drop = ["airdrop", "crypto"]  # any of these words skips an item
+per_kind = 20            # each kind keeps its best 20
+
+[handoff]
+mode = "herdr"           # herdr: type the prompt into the agent's pane
+agent = "garden"         # the agent's name in Herdr (step 6 of PLAYBOOK.md starts it)
+# mode = "command"       # or: give the prompt to a program on stdin, for example
+# command = ["wl-copy"]  # a clipboard tool (xclip, pbcopy) when you have no Herdr
+
+# Each source adds items. "kind" is optional: it puts every item of the
+# source in that kind. Without it, the words in [kinds] decide.
+# {since} in a query becomes the date max_age_days ago.
+
+[[sources]]
+name = "plugin search"
+type = "github-search"
+query = "topic:claude-code-plugin pushed:>{since}"
+kind = "plugins"
+
+[[sources]]
+name = "skill search"
+type = "github-search"
+query = "topic:agent-skills pushed:>{since}"
+kind = "skills"
+
+[[sources]]
+name = "new terminal repos"
+type = "github-search"
+query = "topic:tui created:>{since} stars:>20"
+
+[[sources]]
+name = "prompt search"
+type = "github-search"
+query = "topic:system-prompts pushed:>{since}"
+kind = "prompts"
+
+[[sources]]
+name = "agent news"
+type = "rss"
+url = "https://hnrss.org/newest?q=coding+agent&points=50"
+
+[[sources]]
+name = "AGENTS.md posts"
+type = "rss"
+url = "https://hnrss.org/newest?q=AGENTS.md&points=20"
+kind = "coding"
+
+[[sources]]
+name = "herdr releases"
+type = "github-releases"
+repo = "herdrdev/herdr"
+kind = "news"
+
+# Change the words that decide a kind, or add a kind of your own:
+# [kinds.coding]
+# words = ["agents.md", "claude.md", "dotfiles", "how we", "my setup"]
+# [kinds.mcp]
+# title = "MCP servers"
+# badge = "MCP"
+# words = ["mcp"]
+
+# Change a prompt. It must hold {url}; it can hold {key}, {kind}, {title}, {setup}.
+# [prompts]
+# analyze = "Read {url} without running anything and tell me if it is safe to try."
