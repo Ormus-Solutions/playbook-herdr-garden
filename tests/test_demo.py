@@ -138,6 +138,7 @@ class OwnConfigTest(unittest.TestCase):
         self.assertEqual(call[:3], ["agent", "prompt", "scout"])
         self.assertIn("https://github.com/acme/tdd-skill", call[3])
 
+    @unittest.skipUnless(os.name == "posix", "cron and /bin/sh are Unix tools")
     def test_the_cron_line_runs_where_cron_runs_it(self) -> None:
         line = self.run_garden("cron").stdout.strip()
         self.assertRegex(line, r"^20 7 \* \* \* cd '/.+' && '/.+' src/garden.py --config '/.+' collect >> ")
