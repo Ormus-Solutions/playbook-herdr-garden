@@ -7,6 +7,14 @@ import unittest
 
 import support  # first: it puts src/ on the path
 from feedgarden import kinds, pane, render
+from feedgarden.sources import Item
+
+
+def current(st: pane.State) -> Item:
+    """The selected item; a test that reads one fails here when there is none."""
+    item = st.current()
+    assert item is not None, "no item is selected"
+    return item
 
 
 class KeysTest(unittest.TestCase):
@@ -14,13 +22,13 @@ class KeysTest(unittest.TestCase):
         self.st = pane.State(support.demo_board())
 
     def test_moving_stays_inside_the_list(self) -> None:
-        self.assertEqual(self.st.current()["key"], "acme/review-plugin")
+        self.assertEqual(current(self.st)["key"], "acme/review-plugin")
         pane.handle_key(self.st, curses.KEY_DOWN)
         pane.handle_key(self.st, ord("j"))  # only two plugins: the second key stops at the end
-        self.assertEqual(self.st.current()["key"], "demo-org/pane-test-plugin")
+        self.assertEqual(current(self.st)["key"], "demo-org/pane-test-plugin")
         pane.handle_key(self.st, curses.KEY_UP)
         pane.handle_key(self.st, ord("k"))
-        self.assertEqual(self.st.current()["key"], "acme/review-plugin")
+        self.assertEqual(current(self.st)["key"], "acme/review-plugin")
 
     def test_kinds_switch_by_arrow_tab_and_number(self) -> None:
         pane.handle_key(self.st, curses.KEY_RIGHT)
@@ -38,7 +46,7 @@ class KeysTest(unittest.TestCase):
         pane.handle_key(self.st, ord("j"))
         pane.handle_key(self.st, ord("2"))
         pane.handle_key(self.st, ord("1"))
-        self.assertEqual(self.st.current()["key"], "demo-org/pane-test-plugin")
+        self.assertEqual(current(self.st)["key"], "demo-org/pane-test-plugin")
 
     def test_action_keys(self) -> None:
         self.assertEqual([pane.handle_key(self.st, ord(k)) for k in "idagq"],
@@ -67,7 +75,7 @@ class ScreenTest(unittest.TestCase):
             pane.handle_key(st, ord("j"))
         selected = [render.text(line) for line, sel in pane.screen(st, 80, 20) if sel]
         self.assertEqual(len(selected), 1)
-        self.assertIn(st.current()["title"], selected[0])
+        self.assertIn(current(st)["title"], selected[0])
 
     def test_an_empty_board_says_what_to_do(self) -> None:
         st = pane.State(kinds.build_board([], [], support.demo_config(), support.TODAY))

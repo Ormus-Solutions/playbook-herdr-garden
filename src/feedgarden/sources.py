@@ -120,7 +120,9 @@ def parse_github_search(text: str) -> list[Item]:
     for repo in data["items"]:
         if not isinstance(repo, dict):
             continue
-        lic = repo.get("license") if isinstance(repo.get("license"), dict) else {}
+        lic = repo.get("license")
+        if not isinstance(lic, dict):
+            lic = {}
         spdx = clean(lic.get("spdx_id"), 40)
         topics = [clean(t, 40) for t in repo.get("topics") or [] if isinstance(t, str)]
         stars = repo.get("stargazers_count")

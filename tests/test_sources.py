@@ -138,7 +138,7 @@ class RedirectTest(unittest.TestCase):
                     self.end_headers()
                     self.wfile.write(b"followed")
 
-            def log_message(self, *args: Any) -> None:
+            def log_message(self, format: str, *args: Any) -> None:
                 pass
 
         server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
