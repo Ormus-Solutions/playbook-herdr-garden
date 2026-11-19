@@ -186,7 +186,9 @@ the board's `KEYS` list):
 python3 src/garden.py send analyze <key>
 ```
 
-Verify (right after the key press, before other prompts): `herdr agent read garden --source recent-unwrapped --lines 400 | grep -c 'Garden pick'`
+Run the check right after the key press, before other prompts.
+
+Verify: `herdr agent read garden --source recent-unwrapped --lines 400 | grep -c 'Garden pick'`
 Expected: `1` or more (the agent got the prompt; its answer ends with a verdict: try, watch or skip. The answer is long, so the check reads 400 lines to still reach the prompt)
 
 ### 9. Collect every morning (optional)

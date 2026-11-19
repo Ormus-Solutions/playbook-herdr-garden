@@ -46,7 +46,7 @@ better. Skip it if you do not use a coding agent: the pane is only half of it.
 | Python | 3.11 or newer | `python3 --version` |
 | curses (part of Python on Linux and macOS) | any | `python3 -c 'import curses; print("ok")'` |
 | git | any recent version | `git --version` |
-| Herdr (for the tab with the pane and the agent) | 0.9.5 or newer | `herdr --version` |
+| [Herdr](https://herdr.dev) (for the tab with the pane and the agent) | 0.9.5 or newer | `herdr --version` |
 | A coding agent Herdr can start (Claude Code, Codex, Grok and others) | any | `claude --version` (or `codex --version`, `grok --version`) |
 | cron (optional: a collect every morning) | any | `command -v crontab` |
 
@@ -182,11 +182,11 @@ The Garden tab in Herdr: the pane on the left, the agent on the right.
 | `examples/run.sh`, `examples/expected-output.txt` | the demo and the output it must print |
 | `tests/` | offline tests that pin the behaviour on the synthetic data |
 | `check.sh` | the one gate: tests, placeholders, scrub |
-| `scripts/scrub.sh` | the scrub check, copied from playbook-packaging (the playbook that sets how these playbook repos are packaged), with one change: a commit e-mail that is not a noreply address fails the check |
+| `scripts/scrub.sh` | the scrub check, copied unchanged from playbook-packaging |
 | `CHANGELOG.md` | what changed, newest first |
 
 ## Credits
 
-Made by Ormus (Ormus Solutions). Packaged with playbook-packaging, the
-playbook by Ormus (Ormus Solutions) that sets how these playbook repos are
-packaged. MIT license.
+Made by Ormus (Ormus Solutions). Packaged with
+[playbook-packaging](https://github.com/Ormus-Solutions/playbook-packaging),
+the playbook that sets how these playbook repos are packaged. MIT license.
