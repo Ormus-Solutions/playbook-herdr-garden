@@ -45,9 +45,10 @@ class KeyTest(unittest.TestCase):
         for bad in ("acme", "acme/demo api", "a/b/c", "acme/demo;rm", "acme/demo\n", ""):
             self.assertFalse(text.key_ok(bad), bad)
 
-    def test_url_ok_wants_http_and_no_spaces(self) -> None:
+    def test_url_ok_wants_https_and_no_spaces(self) -> None:
         self.assertTrue(text.url_ok("https://news.example.com/a?b=1"))
-        for bad in ("javascript:alert(1)", "file:///etc/passwd", "https://a b", "https://a\x1b"):
+        for bad in ("http://news.example.com/a", "javascript:alert(1)", "file:///etc/passwd",
+                    "https://a b", "https://a\x1b"):
             self.assertFalse(text.url_ok(bad), bad)
 
 

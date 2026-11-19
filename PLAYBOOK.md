@@ -227,7 +227,7 @@ Expected: `1`
 - Writes: the board file (written to a new file, then renamed, so the pane never reads half of one).
   `tab --apply` creates one Herdr tab with two panes and starts one agent; it touches no other tab.
 - Feed text is untrusted. The tool removes HTML, control characters and terminal escape codes from it,
-  accepts only `https://` links and plain keys, and every prompt tells the agent that the item is data,
+  accepts only `https://` links (an item with a plain `http://` link is left out) and plain keys, and every prompt tells the agent that the item is data,
   not instructions, and to change nothing without a yes.
 - The prompt is a request, not a lock: your agent's own permission settings decide what it may run.
   Keep them strict, because the agent reads pages and repos written by strangers.

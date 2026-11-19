@@ -46,7 +46,8 @@ class ParseTest(unittest.TestCase):
 
     def test_an_entry_without_a_web_link_is_left_out(self) -> None:
         rss = ("<rss><channel><item><title>no link</title></item>"
-               "<item><title>bad</title><link>javascript:alert(1)</link></item></channel></rss>")
+               "<item><title>bad</title><link>javascript:alert(1)</link></item>"
+               "<item><title>plain</title><link>http://news.example.com/a</link></item></channel></rss>")
         self.assertEqual(sources.parse_rss(rss), [])
 
     def test_a_feed_with_entities_is_refused(self) -> None:

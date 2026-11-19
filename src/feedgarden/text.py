@@ -82,7 +82,9 @@ def key_for(url: str) -> str:
 
 
 def url_ok(url: str) -> bool:
-    return url.startswith(("https://", "http://")) and not any(ch.isspace() for ch in url) \
+    """Only https:// links reach a prompt. A plain http:// page can be changed on its way
+    to the agent, and the agent is told to read it."""
+    return url.startswith("https://") and not any(ch.isspace() for ch in url) \
         and all(ch.isprintable() for ch in url)
 
 
