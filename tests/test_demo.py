@@ -48,6 +48,17 @@ class DemoTest(unittest.TestCase):
         done = garden("--demo", "prompt", "diff", "acme/nothing")
         self.assertIn("no item acme/nothing", done.stderr)
 
+    def test_the_board_lists_every_key_that_is_not_a_repo_name(self) -> None:
+        # The error above sends you to `board` for a key. A repo's key is its
+        # name on the row; a feed item's key (link/...) must be listed too.
+        board = garden("--demo").stdout
+        links = re.findall(r"link/[0-9a-f]{12}", board)
+        self.assertEqual(len(links), len(set(links)))  # each one once
+        demo = support.demo_board()
+        expected = {i["key"] for i in [*demo["items"], *demo["skipped"]] if i["key"].startswith("link/")}
+        self.assertEqual(set(links), expected)
+        self.assertEqual(garden("--demo", "prompt", "analyze", links[0]).returncode, 0)
+
 
 class OwnConfigTest(unittest.TestCase):
     """A reader's own config, with the example feeds as local files and a stand-in herdr."""

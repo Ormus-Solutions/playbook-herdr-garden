@@ -134,6 +134,13 @@ def board_text(board: dict[str, Any], width: int = 80) -> str:
         out.append(title.upper())
         out += [text(line) for line, _ in lines]
         out.append("")
+    # `prompt` and `send` take a key. A repo's key is the name on its row; any
+    # other item's key (link/...) is listed here, so the board shows them all.
+    named = [it for it in [*board["items"], *board["skipped"]] if it["key"] != it["title"]]
+    if named:
+        out.append("KEYS (for prompt and send; a repo's key is its name)")
+        out += [f"  {it['key']}  {cut(it['title'], max(width - len(it['key']) - 4, 10))}" for it in named]
+        out.append("")
     failed = [s for s in board["sources"] if not s["ok"]]
     for s in failed:
         out.append(f"source failed: {s['name']}: {s['error']}")

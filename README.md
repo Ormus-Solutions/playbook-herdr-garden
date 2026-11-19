@@ -131,6 +131,14 @@ SKIPPED
   RELEASE demo-api v2.0.0            older than 30 days
   PROMPT  Ten prompt tricks          older than 30 days
 
+KEYS (for prompt and send; a repo's key is its name)
+  link/bc1303ff08f3  demo-api v2.1.0
+  link/450a506db975  Testing agents: a field report
+  link/8a329e62d964  Terminal emulators agree on a new graphics protocol
+  link/7e43d4260ccd  How we run five coding agents in one terminal
+  link/d3abe831d2dd  demo-api v2.0.0
+  link/a2181817da52  Ten prompt tricks
+
 The pane shows the selected item like this:
   acme/review-plugin · 2026-01-14 · ★1240 · fit 3/5
   ★1.2k ✓MIT ✓fresh
