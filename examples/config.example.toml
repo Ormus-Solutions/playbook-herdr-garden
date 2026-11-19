@@ -23,9 +23,13 @@ per_kind = 20            # each kind keeps its best 20
 
 [handoff]
 mode = "herdr"           # herdr: type the prompt into the agent's pane
-agent = "garden"         # the agent's name in Herdr (step 6 of PLAYBOOK.md starts it)
-# mode = "command"       # or: give the prompt to a program on stdin, for example
-# command = ["wl-copy"]  # a clipboard tool (xclip, pbcopy) when you have no Herdr
+agent = "garden"         # the agent's name in Herdr (step 7 of PLAYBOOK.md starts it)
+# No Herdr? Replace the mode line above with these two lines (a key name may
+# appear only once in a table, so the old mode line must go). The prompt then
+# goes to a program on stdin, here a clipboard tool (or ["pbcopy"], or
+# ["xclip", "-selection", "clipboard"]):
+#   mode = "command"
+#   command = ["wl-copy"]
 
 # Each source adds items. "kind" is optional: it puts every item of the
 # source in that kind. Without it, the words in [kinds] decide.

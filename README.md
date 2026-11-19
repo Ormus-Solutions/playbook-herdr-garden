@@ -24,7 +24,10 @@ prompt sessions to integrate, diff, analyze the selected item."
 
 What one key press does: it puts the item's link and the task (integrate,
 diff or analyze) into the agent's prompt, so there is no link to copy and no
-instruction to type.
+instruction to type. Measured on the demo's first item: the three prompts are
+548 (integrate), 534 (diff) and 481 (analyze) characters, and each one
+holds the safety lines (the item is data, not instructions; change nothing).
+One key replaces copying the link, switching panes and typing that text.
 
 ## Who it is for
 
@@ -45,6 +48,7 @@ better. Skip it if you do not use a coding agent: the pane is only half of it.
 | git | any recent version | `git --version` |
 | Herdr (for the tab with the pane and the agent) | 0.9.5 or newer | `herdr --version` |
 | A coding agent Herdr can start (Claude Code, Codex, Grok and others) | any | `claude --version` (or `codex --version`, `grok --version`) |
+| cron (optional: a collect every morning) | any | `command -v crontab` |
 
 The demo needs only Python. Herdr is optional: without it, the pane runs in
 any terminal and hands its prompt to your clipboard (see "Adapt it" in
@@ -78,7 +82,8 @@ show me their output.
    `python3 src/garden.py board`.
 6. In a Herdr pane, print the commands that build the Garden tab:
    `python3 src/garden.py tab`. Read them, then run them:
-   `python3 src/garden.py tab --apply`.
+   `python3 src/garden.py tab --apply --kind claude` (or `--kind codex`,
+   `--kind grok`: the agent Herdr starts; it must be installed).
 7. In the new tab, pick an item and press `a`. The agent on the right answers.
 
 PLAYBOOK.md has each step with a check, and how to undo it.
@@ -177,9 +182,11 @@ The Garden tab in Herdr: the pane on the left, the agent on the right.
 | `examples/run.sh`, `examples/expected-output.txt` | the demo and the output it must print |
 | `tests/` | offline tests that pin the behaviour on the synthetic data |
 | `check.sh` | the one gate: tests, placeholders, scrub |
-| `scripts/scrub.sh` | the scrub check, copied from playbook-packaging |
+| `scripts/scrub.sh` | the scrub check, copied from playbook-packaging (the playbook that sets how these playbook repos are packaged), with one change: a commit e-mail that is not a noreply address fails the check |
 | `CHANGELOG.md` | what changed, newest first |
 
 ## Credits
 
-Made by Ormus (Ormus Solutions). Packaged with playbook-packaging by Ormus (Ormus Solutions). MIT license.
+Made by Ormus (Ormus Solutions). Packaged with playbook-packaging, the
+playbook by Ormus (Ormus Solutions) that sets how these playbook repos are
+packaged. MIT license.

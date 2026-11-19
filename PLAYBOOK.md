@@ -35,7 +35,7 @@ sources (RSS, Atom, GitHub search)
 | git | `git --version` | a version line | install git |
 | Herdr 0.9.5 or newer (steps 7 and 8) | `herdr --version` | `herdr 0.9.5` or a newer version | install it from https://herdr.dev, or use the fallback in step 7 |
 | A coding agent Herdr can start (steps 7 and 8) | `command -v claude codex grok` | at least one path | install one; `herdr agent start --help` lists the kinds Herdr knows |
-| HTTPS to GitHub (step 5) | `python3 -c 'import urllib.request as u; print(u.urlopen("https://api.github.com", timeout=10).status)'` | `200` | check your network or proxy; the demo (steps 1 and 2) works offline |
+| HTTPS to GitHub (step 5) | `python3 -c 'import urllib.request as u; print(u.urlopen("https://api.github.com", timeout=10).status)'` | `200` | check your network or proxy; the demo (steps 1 and 2) works offline. On macOS with Python from python.org, `CERTIFICATE_VERIFY_FAILED` means Python has no certificates yet: run `Install Certificates.command` in that Python's folder under Applications |
 
 ## Steps
 
@@ -145,29 +145,49 @@ python3 src/garden.py tab
 python3 src/garden.py tab --apply --kind claude
 ```
 
-It prints the new tab's id and the command that removes it. Write the tab
-id down for "Undo".
+It first checks that the `--kind` program is installed (`command -v claude`),
+and changes nothing if it is not. Then it prints the new tab's id, how to
+open it and the command that removes it. Write the tab id down for "Undo".
+The tab is made in the background: open it with `herdr tab focus <tab-id>`,
+or click it in the Herdr sidebar.
+
+If it says `step 4 failed (agent_not_ready)`, the tab is built and the agent
+waits on a first-run question in the right pane (for example, whether to
+trust the folder, or a sign-in). Answer it there, then run the Verify. Do
+not run `tab --apply` again: it would make a second tab. Any other failure
+after step 1 prints the tab's id and `herdr tab close <tab-id>`: close it,
+fix the cause, and run `tab --apply` again.
 
 No Herdr? Run `python3 src/garden.py pick` in one terminal and your agent in
-another, and set `[handoff] mode = "command"` with your clipboard tool (see
-"Adapt it"). A key then copies the prompt, and you paste it into the agent.
+another. In `config.toml`, replace the line `mode = "herdr"` under
+`[handoff]` with these two lines (use your clipboard tool: `["pbcopy"]` on
+macOS, `["xclip", "-selection", "clipboard"]` on X11):
 
-Verify: `herdr agent get garden > /dev/null && echo ready`
-Expected: `ready` (no Herdr: `python3 src/garden.py send analyze <a key from the board>` exits 0 and the prompt is on your clipboard)
+```toml
+mode = "command"
+command = ["wl-copy"]
+```
+
+A key then copies the prompt, and you paste it into the agent.
+
+Verify: `herdr agent wait garden --until idle --timeout 60000 > /dev/null && echo ready`
+Expected: `ready` (the agent is idle and takes a prompt; a timeout means it still waits on a question in the right pane. No Herdr: `python3 src/garden.py send analyze <key>` with a key from `board` exits 0, and the prompt is on your clipboard)
 
 ### 8. Hand one item to the agent
 
-In the Garden tab, the person moves to an item in the left pane and presses
+Open the Garden tab (`herdr tab focus <tab-id>`, or click it in the
+sidebar). The person moves to an item in the left pane and presses
 `a` (analyze). The status line at the bottom of the pane says
 `sent to the Herdr agent garden`. The same works from any Herdr pane, with a
-key from `board`:
+key from `board` (a repo's key is its name, `owner/name`; other items are in
+the board's `KEYS` list):
 
 ```bash
 python3 src/garden.py send analyze <key>
 ```
 
-Verify: `herdr agent read garden --source recent-unwrapped --lines 80 | grep -c 'Garden pick'`
-Expected: `1` or more (the agent got the prompt; its answer ends with a verdict: try, watch or skip)
+Verify (right after the key press, before other prompts): `herdr agent read garden --source recent-unwrapped --lines 400 | grep -c 'Garden pick'`
+Expected: `1` or more (the agent got the prompt; its answer ends with a verdict: try, watch or skip. The answer is long, so the check reads 400 lines to still reach the prompt)
 
 ### 9. Collect every morning (optional)
 
@@ -214,7 +234,10 @@ Expected: `written to` and the board's path. Anything else in the log is the rea
 | Where a prompt goes | `[handoff]`, key `mode`: `herdr`, `command` or `show` | `mode = "command"` and `command = ["wl-copy"]` (or `["pbcopy"]`, `["xclip", "-selection", "clipboard"]`) |
 | The agent's name in Herdr | `[handoff]`, key `agent` | `agent = "scout"` |
 | The agent Herdr starts, the tab's name | `tab --apply` options | `python3 src/garden.py tab --apply --kind codex --label Feeds` |
-| A GitHub token (more searches a minute) | the `GITHUB_TOKEN` environment variable of `collect` | `GITHUB_TOKEN="$(gh auth token)" python3 src/garden.py collect` |
+| A GitHub token (more searches a minute) | the `GITHUB_TOKEN` environment variable of `collect` | make a fine-grained token with "Public Repositories (read-only)" access and no permissions (GitHub: Settings, Developer settings, Personal access tokens, Fine-grained tokens), save it in a file only you can read (`chmod 600`), then `GITHUB_TOKEN="$(tr -d '\n' < ~/.config/playbook-herdr-garden/github-token)" python3 src/garden.py collect`. The search needs nothing more; `gh auth token` would hand over your gh login's wide token |
+| A local feed file instead of the network (to test a config offline, as the demo does) | the source's `path`, relative to the config file | `path = "feeds/test.rss"` |
+| The Herdr program, when `herdr` is not on `PATH` | `[handoff]`, key `herdr` | `herdr = "/opt/herdr/bin/herdr"` |
+| A fixed date, so a test board never changes | `today` at the top of the config (the demo uses it); leave it out for real use | `today = "2026-01-15"` |
 | Another config file | `--config`, or `GARDEN_CONFIG` | `GARDEN_CONFIG=~/garden-work.toml python3 src/garden.py pick` |
 | A smarter filter | `src/feedgarden/kinds.py`, function `judge()` | ask a model to score each item against your setup file; keep the same return shape (`fit`, `why`, `group`, or `reason`) |
 
@@ -223,7 +246,7 @@ Expected: `written to` and the board's path. Anything else in the log is the rea
 - `./check.sh` prints `check: ok`.
 - `python3 src/garden.py board | head -n 1` shows the person's title and `N kept` with N above 0.
 - In Herdr, the Garden tab has the pane on the left and the agent on the right, and
-  `herdr agent get garden > /dev/null && echo ready` prints `ready`.
+  `herdr agent wait garden --until idle --timeout 60000 > /dev/null && echo ready` prints `ready`.
 - Pressing `a` on an item in the pane makes the agent answer with a verdict (try, watch or skip).
 
 ## Undo

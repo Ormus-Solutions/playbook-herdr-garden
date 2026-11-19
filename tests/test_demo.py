@@ -34,6 +34,12 @@ class DemoTest(unittest.TestCase):
         board = garden("--demo").stdout
         self.assertIn(board, readme)
 
+    def test_the_prompt_sizes_in_the_readme_are_measured(self) -> None:
+        readme = (support.ROOT / "README.md").read_text(encoding="utf-8")
+        for action in ("integrate", "diff", "analyze"):
+            size = len(garden("--demo", "prompt", action, "acme/review-plugin").stdout.rstrip("\n"))
+            self.assertIn(f"{size} ({action})", readme)
+
     def test_demo_collect_writes_nothing(self) -> None:
         done = garden("--demo", "collect")
         self.assertEqual(done.returncode, 0)
