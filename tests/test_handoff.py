@@ -108,6 +108,8 @@ class SendTest(unittest.TestCase):
         cfg = support.demo_config(mode="herdr", agent="scout", herdr="herdr")
         self.assertEqual(handoff.send("the prompt", cfg, {"HERDR_ENV": "1"}, run), "sent to the Herdr agent scout")
         self.assertEqual(run.calls[0][0], ["herdr", "agent", "prompt", "scout", "the prompt"])
+        self.assertIs(run.calls[0][1]["stdin"], subprocess.DEVNULL)  # herdr never reads the pane's keys
+        self.assertNotIn("input", run.calls[0][1])
 
     def test_a_blocked_agent_gets_nothing_and_you_are_told_why(self) -> None:
         run = Recorder(code=1, stderr='{"error": {"code": "agent_blocked", "message": "dialog"}}')

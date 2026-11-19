@@ -105,10 +105,13 @@ writes the board to `~/.local/state/playbook-herdr-garden/board.json`.
 python3 src/garden.py collect
 ```
 
-Verify: `python3 src/garden.py collect | tail -n 2`
-Expected: a line `board: N kept, M skipped` with N above 0, then `written to` and the board's path. A
-line with `FAILED` names a source that did not answer: fix its `url` or `query`. GitHub allows a few
-searches a minute without a token; `HTTP 403` means wait a minute, or see "Adapt it".
+It prints one line per source, then `board: N kept, M skipped` and
+`written to` with the board's path. A line with `FAILED` names a source that
+did not answer: fix its `url` or `query`. GitHub allows a few searches a
+minute without a token; `HTTP 403` means wait a minute, or see "Adapt it".
+
+Verify: `python3 -c 'import json, pathlib; b = json.loads(pathlib.Path("~/.local/state/playbook-herdr-garden/board.json").expanduser().read_text()); print(sum(s["ok"] for s in b["sources"]), "of", len(b["sources"]), "sources ok,", len(b["items"]), "kept")'`
+Expected: `7 of 7 sources ok, N kept` with N above 0 (the first number is your count of `[[sources]]`; it reads the board, so the feeds are not fetched again)
 
 ### 6. Look at the board
 

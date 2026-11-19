@@ -90,7 +90,8 @@ def apply(steps: list[list[str]], env: Mapping[str, str], run: Run = subprocess.
     for n, step in enumerate(steps, 1):
         argv = [ids.get(part, part) for part in step]
         try:
-            done = run(argv, capture_output=True, text=True, timeout=90, env=dict(env))
+            done = run(argv, capture_output=True, text=True, timeout=90, env=dict(env),
+                       stdin=subprocess.DEVNULL)
         except FileNotFoundError:
             raise TabError(f"step {n}: {argv[0]} is not installed, or not on PATH") from None
         except subprocess.TimeoutExpired:
@@ -99,7 +100,11 @@ def apply(steps: list[list[str]], env: Mapping[str, str], run: Run = subprocess.
             code, message = herdr_error(done.stderr)
             raise TabError(f"step {n} failed ({code or 'exit ' + str(done.returncode)}): {message}. "
                            f"The command was: {shlex.join(argv)}")
-        reply = json.loads(done.stdout) if done.stdout.strip().startswith("{") else {}
+        try:
+            reply = json.loads(done.stdout) if done.stdout.strip() else {}
+        except ValueError:
+            raise TabError(f"step {n}: herdr's reply is not JSON. Look at the tab before you run it "
+                           "again") from None
         if n == 1:
             ids[PICKER] = _get(reply, "result", "root_pane", "pane_id")
             ids[TAB] = _get(reply, "result", "tab", "tab_id")

@@ -66,7 +66,9 @@ if fail and " ".join(args[:2]) == fail:
     print(json.dumps({"error": {"code": "agent_not_ready", "message": "the pane is not at a prompt"}}),
           file=sys.stderr)
     sys.exit(1)
-if args[:2] == ["tab", "create"]:
+if os.environ.get("FAKE_HERDR_GARBLED") and args[:2] == ["pane", "split"]:
+    print("{not json")
+elif args[:2] == ["tab", "create"]:
     print(json.dumps({"result": {"type": "tab_created", "tab": {"tab_id": "w1:t5"},
                                  "root_pane": {"pane_id": "w1:p9"}}}))
 elif args[:2] == ["pane", "split"]:

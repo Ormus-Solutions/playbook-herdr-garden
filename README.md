@@ -22,8 +22,9 @@ In my own words: "The Garden, a place where I can navigate pre-filtered
 Plugins, Skills, Repos, News, Prompts and How others code, and very easily
 prompt sessions to integrate, diff, analyze the selected item."
 
-One key press replaces the old routine: copy a link, open an agent, and type
-out what to do with it.
+What one key press does: it puts the item's link and the task (integrate,
+diff or analyze) into the agent's prompt, so there is no link to copy and no
+instruction to type.
 
 ## Who it is for
 

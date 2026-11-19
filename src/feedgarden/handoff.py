@@ -106,16 +106,16 @@ def send(prompt: str, cfg: Config, env: Mapping[str, str] = os.environ, run: Run
     if cfg.mode == "command":
         argv = list(cfg.command)
         what = argv[0]
-        stdin: str | None = prompt
+        io: dict[str, Any] = {"input": prompt}
     else:
         if env.get("HERDR_ENV") != "1":
             raise HandoffError('not inside a Herdr pane (HERDR_ENV is not 1): start the pane in Herdr, '
                                'or set [handoff] mode to "show" or "command"')
         argv = [cfg.herdr, "agent", "prompt", cfg.agent, prompt]
         what = "herdr"
-        stdin = None
+        io = {"stdin": subprocess.DEVNULL}  # not the pane's keyboard: herdr must never wait on it
     try:
-        done = run(argv, input=stdin, capture_output=True, text=True, timeout=TIMEOUT)
+        done = run(argv, capture_output=True, text=True, timeout=TIMEOUT, **io)
     except FileNotFoundError:
         raise HandoffError(f"{what} is not installed, or not on PATH") from None
     except subprocess.TimeoutExpired:

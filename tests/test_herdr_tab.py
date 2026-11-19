@@ -78,6 +78,12 @@ class ApplyTest(unittest.TestCase):
             herdr_tab.apply(self.steps, env, say=self.said.append)
         self.assertEqual(len(self.calls()), 1)  # nothing after the failed step ran
 
+    def test_a_reply_that_is_not_json_stops_the_steps(self) -> None:
+        env = support.herdr_env(self.log, FAKE_HERDR_GARBLED="1")
+        with self.assertRaisesRegex(herdr_tab.TabError, "step 2: herdr's reply is not JSON"):
+            herdr_tab.apply(self.steps, env, say=self.said.append)
+        self.assertEqual(len(self.calls()), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
