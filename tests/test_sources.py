@@ -1,8 +1,11 @@
 """The parsers and the collect step, on the synthetic feeds and on small made-up inputs."""
 from __future__ import annotations
 
+import http.server
 import os
+import threading
 import unittest
+import urllib.request
 from typing import Any
 from unittest import mock
 
@@ -100,6 +103,52 @@ class CollectTest(unittest.TestCase):
         self.assertEqual(items[0]["title"], "demo-api v2.1.0")
         self.assertTrue(items[0]["release"])
         self.assertEqual(items[0]["hint"], "news")
+
+
+class RedirectTest(unittest.TestCase):
+    """fetch() follows a redirect only to https://, and keeps the token on its own host."""
+
+    def follow(self, old: str, new: str) -> urllib.request.Request | None:
+        req = urllib.request.Request(old, headers={"Authorization": "Bearer test-value"})
+        return sources.SafeRedirect().redirect_request(req, None, 302, "Found", {}, new)
+
+    def test_a_redirect_that_leaves_https_is_refused(self) -> None:
+        with self.assertRaises(sources.SourceError) as caught:
+            self.follow("https://feeds.example.com/a", "http://feeds.example.com/a")
+        self.assertIn("https://", str(caught.exception))
+
+    def test_the_token_stays_on_its_own_host(self) -> None:
+        same = self.follow("https://api.github.com/search", "https://api.github.com/search?page=2")
+        other = self.follow("https://api.github.com/search", "https://elsewhere.example.com/")
+        assert same is not None and other is not None
+        self.assertEqual(same.get_header("Authorization"), "Bearer test-value")
+        self.assertIsNone(other.get_header("Authorization"))
+
+    def test_fetch_uses_it(self) -> None:
+        # A real server on this machine's loopback address: it sends a redirect
+        # to a plain http:// page, and fetch() must refuse to follow it.
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self) -> None:
+                if self.path == "/start":
+                    self.send_response(302)
+                    self.send_header("Location", "/plain")
+                    self.end_headers()
+                else:
+                    self.send_response(200)
+                    self.end_headers()
+                    self.wfile.write(b"followed")
+
+            def log_message(self, *args: Any) -> None:
+                pass
+
+        server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        no_proxy = {k: "" for k in ("http_proxy", "HTTP_PROXY", "https_proxy", "HTTPS_PROXY")}
+        with mock.patch.dict(os.environ, {**no_proxy, "no_proxy": "*"}):
+            with self.assertRaises(sources.SourceError):
+                sources.fetch(f"http://127.0.0.1:{server.server_port}/start", {})
 
 
 if __name__ == "__main__":

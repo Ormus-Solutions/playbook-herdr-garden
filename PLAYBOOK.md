@@ -221,8 +221,10 @@ Expected: `1`
 
 ## Safety
 
-- Reads: its config file; the public feeds in `[[sources]]`, over HTTPS only, at most 5 MB each; the
-  `GITHUB_TOKEN` variable when set, which it sends only to GitHub in a header and never prints or saves.
+- Reads: its config file; the public feeds in `[[sources]]`, over HTTPS only (a redirect to a plain
+  `http://` address is refused), at most 5 MB each; the `GITHUB_TOKEN` variable when set, which it
+  sends only to GitHub in a header (it is dropped if a redirect leads to another host) and never
+  prints or saves.
   The setup file is read by the agent, not by the tool: the tool only puts its path in the prompt.
 - Writes: the board file (written to a new file, then renamed, so the pane never reads half of one).
   `tab --apply` creates one Herdr tab with two panes and starts one agent; it touches no other tab.

@@ -135,11 +135,33 @@ def parse_github_search(text: str) -> list[Item]:
     return out
 
 
+class SafeRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow a redirect only to https://, and keep the token on the host it was meant for.
+
+    urllib's own handler follows a redirect from https:// to plain http://, and
+    copies every header to the new address, Authorization too. This one refuses
+    the first and drops the token when the host changes.
+    """
+
+    def redirect_request(self, req: urllib.request.Request, fp: Any, code: int, msg: str,
+                         headers: Any, newurl: str) -> urllib.request.Request | None:
+        if not newurl.startswith("https://"):
+            if fp is not None:
+                fp.close()
+            raise SourceError("refused a redirect to a link that is not https://")
+        new = super().redirect_request(req, fp, code, msg, headers, newurl)
+        old_host, new_host = urllib.parse.urlsplit(req.full_url), urllib.parse.urlsplit(newurl)
+        if new is not None and (old_host.hostname, old_host.port) != (new_host.hostname, new_host.port):
+            new.remove_header("Authorization")
+        return new
+
+
 def fetch(url: str, headers: dict[str, str]) -> str:
     """GET a URL and return its text. The only function that uses the network."""
     req = urllib.request.Request(url, headers={"User-Agent": "playbook-herdr-garden", **headers})
+    opener = urllib.request.build_opener(SafeRedirect)  # it takes the place of the default handler
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with opener.open(req, timeout=20) as resp:
             body = resp.read(MAX_BYTES + 1)
     except urllib.error.HTTPError as e:
         raise SourceError(f"HTTP {e.code}") from None
