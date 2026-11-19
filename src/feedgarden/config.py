@@ -6,10 +6,12 @@ environment variable, then ~/.config/playbook-herdr-garden/config.toml.
 
 A wrong setting stops the tool with a message that names the key, before any
 feed is fetched. This is called "fail fast": a typo shows at once, not as an
-empty board later.
+empty board later. A key the tool does not read is a mistake too: a typo like
+min_star would otherwise load quietly, and the default would take its place.
 """
 from __future__ import annotations
 
+import difflib
 import os
 import re
 import tomllib
@@ -25,6 +27,14 @@ SOURCE_TYPES = ("rss", "atom", "github-search", "github-releases")
 HANDOFF_MODES = ("herdr", "command", "show")
 ACTIONS = ("integrate", "diff", "analyze")
 AGENT_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")  # the names Herdr accepts for an agent
+
+# Every key the tool reads, per table. Anything else in the file is refused.
+TOP_KEYS = ("title", "interests", "setup", "board", "today", "filter", "handoff", "prompts",
+            "sources", "kinds")
+FILTER_KEYS = ("max_age_days", "min_stars", "drop", "per_kind")
+HANDOFF_KEYS = ("mode", "agent", "command", "herdr")
+SOURCE_KEYS = ("name", "type", "url", "path", "query", "repo", "kind")
+KIND_KEYS = ("title", "badge", "words")
 
 # The kinds, in the order the pane shows them. "words" decide the kind: the
 # first kind with a word that starts a word of the item wins. A kind with no
@@ -91,6 +101,15 @@ def _words(value: Any, key: str, name: str, empty_ok: bool = True) -> list[str]:
     return [v.strip().lower() for v in value]
 
 
+def _known(table: dict[str, Any], keys: tuple[str, ...], where: str, name: str) -> None:
+    """Refuse a key the tool does not read, and guess the one that was meant."""
+    for key in table:
+        if key not in keys:
+            near = difflib.get_close_matches(key, keys, n=1)
+            hint = f"did you mean '{near[0]}'?" if near else f"the keys are {', '.join(keys)}"
+            raise ConfigError(f"config {name}: unknown key '{key}' {where} ({hint})")
+
+
 def _int(table: dict[str, Any], key: str, default: int, name: str) -> int:
     value = table.get(key, default)
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
@@ -114,6 +133,7 @@ def _kinds(raw: Any, name: str) -> dict[str, dict[str, Any]]:
     for kind, table in raw.items():
         if not re.match(r"^[a-z][a-z0-9-]{0,30}$", kind) or not isinstance(table, dict):
             raise ConfigError(f"config {name}: [kinds.{kind}] needs a short lowercase name and keys")
+        _known(table, KIND_KEYS, f"in [kinds.{kind}]", name)
         merged = kinds.get(kind, {"title": kind.title(), "badge": kind.upper()[:6], "words": []})
         for key in ("title", "badge"):
             if key in table:
@@ -130,6 +150,7 @@ def _source(raw: Any, base: Path, kinds: dict[str, Any], n: int, name: str) -> S
     where = f"config {name}: source {n}"
     if not isinstance(raw, dict):
         raise ConfigError(f"{where} must be a [[sources]] table")
+    _known(raw, SOURCE_KEYS, f"in source {n}", name)
     stype = raw.get("type")
     if stype not in SOURCE_TYPES:
         raise ConfigError(f"{where}: 'type' must be one of {', '.join(SOURCE_TYPES)}")
@@ -162,6 +183,7 @@ def load(path: Path) -> Config:
             raw = tomllib.load(f)
     except tomllib.TOMLDecodeError as e:
         raise ConfigError(f"config {name} is not valid TOML: {e}") from None
+    _known(raw, TOP_KEYS, "at the top level", name)
     base = path.resolve().parent
     kinds = _kinds(raw.get("kinds"), name)
     sources = raw.get("sources") or []
@@ -172,6 +194,8 @@ def load(path: Path) -> Config:
     prompts = raw.get("prompts") or {}
     if not isinstance(filt, dict) or not isinstance(hand, dict) or not isinstance(prompts, dict):
         raise ConfigError(f"config {name}: [filter], [handoff] and [prompts] must be tables")
+    _known(filt, FILTER_KEYS, "in [filter]", name)
+    _known(hand, HANDOFF_KEYS, "in [handoff]", name)
 
     mode = hand.get("mode", "herdr")
     if mode not in HANDOFF_MODES:

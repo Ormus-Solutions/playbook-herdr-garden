@@ -61,6 +61,18 @@ class ConfigTest(unittest.TestCase):
         self.assertIn("'kind'", self.refused(support.MINIMAL + 'kind = "videos"\n'))
         self.assertIn("not valid TOML", self.refused("interests = [\n"))
 
+    def test_an_unknown_key_is_refused_by_name(self) -> None:
+        # A typo must not load quietly with the default in its place.
+        message = self.refused(support.MINIMAL + '[filter]\nmin_star = 10\n')
+        self.assertIn("'min_star' in [filter]", message)
+        self.assertIn("did you mean 'min_stars'", message)
+        self.assertIn("'handof' at the top level", self.refused(support.MINIMAL + '[handof]\nmode = "show"\n'))
+        self.assertIn("'agnet' in [handoff]", self.refused(support.MINIMAL + '[handoff]\nagnet = "x"\n'))
+        self.assertIn("'word' in [kinds.mcp]", self.refused(support.MINIMAL + '[kinds.mcp]\nword = ["mcp"]\n'))
+        # In a source, the typo is named before the missing key it causes.
+        self.assertIn("'urls' in source 1", self.refused(
+            'interests = ["a"]\n[[sources]]\ntype = "rss"\nurls = "https://a.example"\n'))
+
     def test_handoff_settings_are_checked(self) -> None:
         self.assertIn("'mode'", self.refused(support.MINIMAL + '[handoff]\nmode = "email"\n'))
         self.assertIn("'agent'", self.refused(support.MINIMAL + '[handoff]\nagent = "Bad Name"\n'))

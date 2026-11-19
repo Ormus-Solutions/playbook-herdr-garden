@@ -79,7 +79,8 @@ cp -n examples/config.example.toml ~/.config/playbook-herdr-garden/config.toml
 
 Verify: `python3 src/garden.py tab | head -n 1`
 Expected: `# Build the Garden tab. Run these inside a Herdr pane, in this order.` (this
-loads the config and checks every key; a mistake prints the key's name instead)
+loads the config and checks every key; a wrong value, or a key the tool does not
+know (a typo like `min_star`), prints the key's name instead)
 
 ### 4. Write your setup file
 
